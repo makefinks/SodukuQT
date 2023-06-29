@@ -12,6 +12,9 @@ GameDialog::GameDialog(QWidget *parent) :
     ui->setupUi(this);
     initColors();
     setNumberAt(4, 3, "2");
+    qInfo() << getNumberAt(4,3);
+    qInfo() << getNumberAt(4,2);
+
 
    // for(int i = 0; i<8; i++){
        // qInfo() << ui->gridLayout->itemAt(i);
@@ -57,9 +60,9 @@ void GameDialog::setNumberAt(int row, int column, const QString& number){
         QLayoutItem *layoutItem = ui->gridLayout->itemAtPosition(subGridRow, subGridCol);
         qInfo() << ui->gridLayout->count();
         if(layoutItem) {
-            qInfo() << "MainGrid:" << layoutItem;
+            //qInfo() << "MainGrid:" << layoutItem;
             QGridLayout *subGrid = qobject_cast<QGridLayout*>(layoutItem->layout());
-            qInfo() << "SubGrid:" << subGrid;
+            //qInfo() << "SubGrid:" << subGrid;
             if(subGrid) {
                 // Get the QLineEdit from the sub-grid
                 QLayoutItem *subLayoutItem = subGrid->itemAtPosition(innerRow, innerCol);
@@ -73,6 +76,38 @@ void GameDialog::setNumberAt(int row, int column, const QString& number){
             }
         }
     }
+
+int GameDialog::getNumberAt(int row, int column){
+        int subGridRow = row / 3;
+        int subGridCol = column / 3;
+
+
+        int innerRow = row % 3;
+        int innerCol = column % 3;
+
+        qInfo() << "row:" <<subGridRow;
+        qInfo() << "Col:" <<subGridCol;
+
+        // Get the sub-grid
+        QLayoutItem *layoutItem = ui->gridLayout->itemAtPosition(subGridRow, subGridCol);
+       // qInfo() << ui->gridLayout->count();
+        if(layoutItem) {
+            //qInfo() << "MainGrid:" << layoutItem;
+            QGridLayout *subGrid = qobject_cast<QGridLayout*>(layoutItem->layout());
+            //qInfo() << "SubGrid:" << subGrid;
+            if(subGrid) {
+                // Get the QLineEdit from the sub-grid
+                QLayoutItem *subLayoutItem = subGrid->itemAtPosition(innerRow, innerCol);
+                if(subLayoutItem) {
+                    QLineEdit *lineEdit = qobject_cast<QLineEdit*>(subLayoutItem->widget());
+                    if(lineEdit) {
+                        // Set the number
+                        return lineEdit->text().toInt() ? lineEdit->text().toInt() : -1;
+                    }
+                }
+            }
+        }
+}
 
 
 
