@@ -8,13 +8,17 @@
 #include <cstdlib>
 #include <ctime>
 #include <algorithm>
+#include <random>
 
 
 #define N 9
 
 bool isSafe(int grid[N][N], int row, int col, int num);
 bool solveSudoku(int grid[N][N], int row, int col);
+int countSolutions(int grid[N][N], int row, int col);
 void removeDigits(int grid[N][N], int n);
+bool isUnique(int grid[N][N]);
+
 void disableAll();
 
 GameDialog::GameDialog(QWidget *parent) :
@@ -35,17 +39,20 @@ GameDialog::GameDialog(QWidget *parent) :
     if(solveSudoku(grid, 0,0)){
         //removeDigitsFromGui(grid, 30);
 
+
     for (int i = 0; i < N; i++) {
              for (int j = 0; j < N; j++){
-            qInfo() << grid[i][j] << " ";
+            // qInfo() << grid[i][j] << " ";
                  setNumberAt(i, j, QString::number(grid[i][j]));
         }
-        qInfo() << Qt::endl;
+       // qInfo() << Qt::endl;
     }
 
-    removeDigitsFromGui(grid, 50); // <---- Schwierigkeitsgrad
+
+    removeDigitsFromGui(grid, 80); // <---- Schwierigkeitsgrad
     connectEditListener();
     //disableAll();
+    qInfo() << countSolutions(grid, 0,0);
 }
 
 
@@ -108,6 +115,37 @@ bool solveSudoku(int grid[N][N], int row, int col){
     }
     return false;
 }
+int countSolutions(int grid[N][N], int row = 0, int col = 0) {
+    // If the last cell in the grid has been processed, return 1
+    if (row == N - 1 && col == N)
+        return 1;
+
+    if (col == N) {
+        row++;
+        col = 0;
+    }
+
+    if (grid[row][col] > 0)
+        return countSolutions(grid, row, col + 1);
+
+    int count = 0;
+
+    for (int num = 1; num <= N; num++) {
+        if (isSafe(grid, row, col, num)) {
+            grid[row][col] = num;
+
+            count += countSolutions(grid, row, col + 1);
+        }
+
+        grid[row][col] = 0;
+    }
+    return count;
+}
+
+bool isUnique(int grid[N][N]) {
+    return countSolutions(grid) == 1;
+}
+
 
 void GameDialog::removeDigits(int grid[N][N], int n){
     srand(time(0));
@@ -117,14 +155,30 @@ void GameDialog::removeDigits(int grid[N][N], int n){
         grid[row][col] = 0;
     }
 }
-void GameDialog::removeDigitsFromGui(int grid[N][N], int n){
+void GameDialog::removeDigitsFromGui(int grid[N][N], int n) {
     srand(time(0));
-    for(int i = 0; i < n; i++){
-        int cellId = rand()%81;
-        int row = cellId/9, col = cellId%9;
-        setNumberAt(row, col, "");
+    std::vector<int> positions(81);
+    std::iota(positions.begin(), positions.end(), 0); // fill with numbers from 0 to 80
+    std::shuffle(positions.begin(), positions.end(), std::mt19937{std::random_device{}()}); // shuffle the positions
+    int count = 0;
+    for (int position : positions) {
+        int row = position / 9, col = position % 9;
+        int temp = grid[row][col];
+        grid[row][col] = 0;
+        // if the Sudoku puzzle is still unique after removing the number, keep it removed
+        if (isUnique(grid)) {
+            setNumberAt(row, col, "");
+            count++;
+            if (count == n) {
+                break;
+            }
+        } else {
+            // else, add it back
+            grid[row][col] = temp;
+        }
     }
 }
+
 
 void GameDialog::initColors(){
 
@@ -241,7 +295,7 @@ void GameDialog::setNumberAt(int row, int column, const QString& number){
 
         // Get the sub-grid
         QLayoutItem *layoutItem = ui->gridLayout->itemAtPosition(subGridRow, subGridCol);
-        qInfo() << ui->gridLayout->count();
+        //qInfo() << ui->gridLayout->count();
         if(layoutItem) {
             //qInfo() << "MainGrid:" << layoutItem;
             QGridLayout *subGrid = qobject_cast<QGridLayout*>(layoutItem->layout());
