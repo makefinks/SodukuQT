@@ -21,11 +21,17 @@ bool isUnique(int grid[N][N]);
 
 void disableAll();
 
-GameDialog::GameDialog(QWidget *parent) :
+GameDialog::GameDialog(const QVector<QString>& stringArray,QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::GameDialog)
+    ui(new Ui::GameDialog),
+    playerArray(stringArray)
 {
 
+    // Display Players in debug
+    qInfo() << "Player Count:" << playerArray.size();
+    for(int i = 0; i<playerArray.size(); i++){
+        qInfo() << playerArray[i];
+    }
 
     this->setFixedSize(500, 600);
     ui->setupUi(this);

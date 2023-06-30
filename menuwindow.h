@@ -15,6 +15,7 @@ class MenuWindow : public QMainWindow
 public:
     MenuWindow(QWidget *parent = nullptr);
     ~MenuWindow();
+    QVector<QString> getPlayers();
 
 private slots:
     void on_addPlayer_Button_clicked();
@@ -24,5 +25,6 @@ private slots:
 private:
     Ui::MenuWindow *ui;
     GameDialog *threexthreedialog;
+    int playerCount = 0;
 };
 #endif // MENUWINDOW_H

@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QLineEdit>
+#include <QVector>
 #define N 9
 
 namespace Ui {
@@ -14,7 +15,7 @@ class GameDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit GameDialog(QWidget *parent = nullptr);
+    explicit GameDialog(const QVector<QString>& stringArray, QWidget *parent = nullptr);
     ~GameDialog();
     void setNumberAt(int row, int column, const QString& number);
     int getNumberAt(int row, int column);
@@ -32,8 +33,9 @@ private slots:
 
 private:
     Ui::GameDialog *ui;
-    int lastModified[1][2] = {-1};
+    int lastModified[1][2] = {};
     int grid[N][N] = {0};
+    QVector<QString> playerArray;
 };
 
 #endif // GAMEDIALOG_H
