@@ -49,7 +49,7 @@ GameDialog::GameDialog(QWidget *parent) :
     }
 
 
-    removeDigitsFromGui(grid, 80); // <---- Schwierigkeitsgrad
+    removeDigitsFromGui(grid, 81); // <---- Schwierigkeitsgrad
     connectEditListener();
     //disableAll();
     qInfo() << countSolutions(grid, 0,0);
@@ -160,13 +160,18 @@ void GameDialog::removeDigitsFromGui(int grid[N][N], int n) {
     std::vector<int> positions(81);
     std::iota(positions.begin(), positions.end(), 0); // fill with numbers from 0 to 80
     std::shuffle(positions.begin(), positions.end(), std::mt19937{std::random_device{}()}); // shuffle the positions
+
+    // Create a copy of grid to perform modifications on
+    int gridCopy[N][N];
+    std::copy(&grid[0][0], &grid[0][0]+N*N, &gridCopy[0][0]);
+
     int count = 0;
     for (int position : positions) {
         int row = position / 9, col = position % 9;
-        int temp = grid[row][col];
-        grid[row][col] = 0;
+        int temp = gridCopy[row][col];
+        gridCopy[row][col] = 0;
         // if the Sudoku puzzle is still unique after removing the number, keep it removed
-        if (isUnique(grid)) {
+        if (isUnique(gridCopy)) {
             setNumberAt(row, col, "");
             count++;
             if (count == n) {
@@ -174,7 +179,7 @@ void GameDialog::removeDigitsFromGui(int grid[N][N], int n) {
             }
         } else {
             // else, add it back
-            grid[row][col] = temp;
+            gridCopy[row][col] = temp;
         }
     }
 }
