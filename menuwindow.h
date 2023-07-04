@@ -15,7 +15,7 @@ class MenuWindow : public QMainWindow
 public:
     MenuWindow(QWidget *parent = nullptr);
     ~MenuWindow();
-    QVector<QString> getPlayers();
+    QVector<QVector<QString>> getPlayers();
 
 private slots:
     void on_addPlayer_Button_clicked();

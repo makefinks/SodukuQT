@@ -9,7 +9,8 @@
 #include <ctime>
 #include <algorithm>
 #include <random>
-
+#include <QStandardItemModel>
+#include <QString>
 
 #define N 9
 
@@ -18,23 +19,28 @@ bool solveSudoku(int grid[N][N], int row, int col);
 int countSolutions(int grid[N][N], int row, int col);
 void removeDigits(int grid[N][N], int n);
 bool isUnique(int grid[N][N]);
+void updateScore(int number);
 
 void disableAll();
 
-GameDialog::GameDialog(const QVector<QString>& stringArray,QWidget *parent) :
+GameDialog::GameDialog(const QVector<QVector<QString>>& stringArray,QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GameDialog),
     playerArray(stringArray)
 {
 
+    updateScore(0);
+
     // Display Players in debug
     qInfo() << "Player Count:" << playerArray.size();
     for(int i = 0; i<playerArray.size(); i++){
-        qInfo() << playerArray[i];
+        qInfo() << playerArray[i][0];
+        qInfo() << playerArray[i][1];
     }
 
     this->setFixedSize(500, 600);
     ui->setupUi(this);
+
     initColors();
     //setNumberAt(4, 3, "2");
     //qInfo() << getNumberAt(4,3);
@@ -78,6 +84,33 @@ GameDialog::~GameDialog()
 
 void connectListeners(){
 
+}
+
+void GameDialog::updateScore(int number){
+
+    QStandardItemModel *model = new QStandardItemModel(playerArray.size(), 2, this); // 2 Columns for PlayerName and PlayerScore
+    model->setHorizontalHeaderItem(0, new QStandardItem(QString("Player Name")));
+    model->setHorizontalHeaderItem(1, new QStandardItem(QString("Player Score")));
+
+    for(int i = 0; i < playerArray.size(); i++) {
+    model->setItem(i, 0, new QStandardItem(QString(playerArray[i][0])));
+    model->setItem(i, 1, new QStandardItem(playerArray[i][1]));
+    }
+
+
+    ui->gridLayout->itemAtPosition(6, 0);
+
+    if (ui->gridLayout->itemAtPosition(6, 0)) {
+    ui->scoreBoard->setModel(model);
+    ui->scoreBoard->horizontalHeader()->setStretchLastSection(true);
+    ui->scoreBoard->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    } else {
+    qDebug() << "ui->scoreBoard is null";
+    }
+
+    //ui->scoreBoard->setModel(model);
+    //ui->scoreBoard->horizontalHeader()->setStretchLastSection(true);
+    //ui->scoreBoard->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 }
 
 // Checks if a number can be placed at grid[row][col]
@@ -376,6 +409,24 @@ void GameDialog::on_checkButton_clicked()
             enableAll();
             ui->statusLabel->setText("richtig");
             lastModified[0][0] = -1;
+
+
+
+            /*
+            // Ergebnis zum Datenmodell hinzufügen
+            QStandardItemModel *model = dynamic_cast<QStandardItemModel*>(ui->scoreBoard->model());
+            if (!model) {
+                model = new QStandardItemModel(this);
+                ui->scoreBoard->setModel(model);
+            }
+*/
+            //QStandardItem *playerArray = new QStandardItem(QString::number(correct));
+            //model->appendRow(playerArray);
+
+            // scoreBoard transparent und deaktiviert machen
+            ui->scoreBoard->setStyleSheet("background-color: transparent;");
+            ui->scoreBoard->setEditTriggers(QAbstractItemView::NoEditTriggers);
+
         }else if(lastModified[0][0] == -1){
             ui->statusLabel->setText("Keine Eingabe");
         }
@@ -383,5 +434,9 @@ void GameDialog::on_checkButton_clicked()
             ui->statusLabel->setText("falsch");
         }
 
+}
+void GameDialog::on_pushButton_clicked()
+{
+    QApplication::quit();
 }
 

@@ -15,7 +15,7 @@ class GameDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit GameDialog(const QVector<QString>& stringArray, QWidget *parent = nullptr);
+    explicit GameDialog(const QVector<QVector<QString>>& stringArray, QWidget *parent = nullptr);
     ~GameDialog();
     void setNumberAt(int row, int column, const QString& number);
     int getNumberAt(int row, int column);
@@ -25,17 +25,20 @@ public:
     void disableAll(QLineEdit *editedLineEdit);
     void enableAll();
     void connectEditListener();
+    void updateScore(int number);
 
 private slots:
     void on_lineEdit_5_textEdited(const QString &arg1);
-
     void on_checkButton_clicked();
+    void on_pushButton_clicked();
 
 private:
+    int currentRound = 0;
+    int allowed[9] = {1,2,3,4,5,6,7,8,9};
     Ui::GameDialog *ui;
     int lastModified[1][2] = {};
     int grid[N][N] = {0};
-    QVector<QString> playerArray;
+    QVector<QVector<QString>> playerArray;
 };
 
 #endif // GAMEDIALOG_H

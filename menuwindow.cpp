@@ -35,9 +35,9 @@ void MenuWindow::on_addPlayer_Button_clicked()
 
 }
 
-QVector<QString> MenuWindow::getPlayers() {
-    QVector<QString> players;
-
+QVector<QVector<QString>> MenuWindow::getPlayers() {
+   QVector<QVector<QString>> playersAndScores;
+    int index = 0;
     for(int i = 0; i< ui->PlayerContainer_LayoutVertical->layout()->count(); i++){
         QLayoutItem* item = ui->PlayerContainer_LayoutVertical->layout()->itemAt(i);
 
@@ -55,14 +55,18 @@ QVector<QString> MenuWindow::getPlayers() {
 
                     if(lineEdit) {
                         // Get the text from the QLineEdit and add it to the players QVector
-                        players.append(lineEdit->text());
+                        QVector<QString> playerAndScore;
+                        playerAndScore.append(lineEdit->text());
+                        playerAndScore.append(0);
+
+                        playersAndScores.append(playerAndScore);
                     }
                 }
             }
         }
     }
 
-    return players;
+    return playersAndScores;
 }
 
 

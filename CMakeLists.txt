@@ -20,7 +20,7 @@ set(PROJECT_SOURCES
         gamedialog.h
         gamedialog.cpp
         gamedialog.ui
-)
+        gamewindow.cpp)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(SodukuMaster
