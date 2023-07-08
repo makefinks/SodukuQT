@@ -17,6 +17,8 @@ MenuWindow::~MenuWindow()
 
 void MenuWindow::on_addPlayer_Button_clicked()
 {
+    if(playerCount < 3){
+
     playerCount++;
     QVBoxLayout* layout = qobject_cast<QVBoxLayout*> (ui->PlayerContainer_LayoutVertical->layout());
  //QString buttonText = "Hello";
@@ -32,6 +34,7 @@ void MenuWindow::on_addPlayer_Button_clicked()
     newPlayerSlot->addWidget(lineEdit);
 
     layout->insertLayout(layout->count(), newPlayerSlot);
+    }
 
 }
 

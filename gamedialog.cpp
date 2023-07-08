@@ -11,6 +11,7 @@
 #include <random>
 #include <QStandardItemModel>
 #include <QString>
+#include <algorithm>
 
 #define N 9
 
@@ -29,29 +30,27 @@ GameDialog::GameDialog(const QVector<QVector<QString>>& stringArray,QWidget *par
     playerArray(stringArray)
 {
 
-    updateScore(0);
-
     // Display Players in debug
     qInfo() << "Player Count:" << playerArray.size();
     for(int i = 0; i<playerArray.size(); i++){
         qInfo() << playerArray[i][0];
         qInfo() << playerArray[i][1];
+        playerArray[i][1] = "0";
     }
 
-    this->setFixedSize(500, 600);
+    this->setFixedSize(600, 700);
     ui->setupUi(this);
+    ui->checkButton->setFocus();
+    updateScore(0);
+    updateAllowed();
 
     initColors();
-    //setNumberAt(4, 3, "2");
-    //qInfo() << getNumberAt(4,3);
-    //qInfo() << getNumberAt(4,2);
 
+    ui->currPlayerLabel->setText("Am Zug: " + playerArray[currentTurnIndex][0]);
 
 
     if(solveSudoku(grid, 0,0)){
         //removeDigitsFromGui(grid, 30);
-
-
     for (int i = 0; i < N; i++) {
              for (int j = 0; j < N; j++){
             // qInfo() << grid[i][j] << " ";
@@ -61,7 +60,7 @@ GameDialog::GameDialog(const QVector<QVector<QString>>& stringArray,QWidget *par
     }
 
 
-    removeDigitsFromGui(grid, 81); // <---- Schwierigkeitsgrad
+    removeDigitsFromGui(grid, 30); // <---- Schwierigkeitsgrad
     connectEditListener();
     //disableAll();
     qInfo() << countSolutions(grid, 0,0);
@@ -81,6 +80,20 @@ GameDialog::~GameDialog()
 }
 
 
+void GameDialog::checkFinished(){
+    bool end = true;
+    for(int row = 0; row < N; row++){
+        for(int column = 0; column < N; column++){
+            if(grid[row][column] != getNumberAt(row, column)){
+                 end = false;
+            }
+        }
+    }
+    if(end){
+        openFinalScoreDialog();
+        this->close();
+    }
+}
 
 void connectListeners(){
 
@@ -88,29 +101,27 @@ void connectListeners(){
 
 void GameDialog::updateScore(int number){
 
-    QStandardItemModel *model = new QStandardItemModel(playerArray.size(), 2, this); // 2 Columns for PlayerName and PlayerScore
-    model->setHorizontalHeaderItem(0, new QStandardItem(QString("Player Name")));
-    model->setHorizontalHeaderItem(1, new QStandardItem(QString("Player Score")));
+
+    ui->scoreBoard->setRowCount(playerArray.size());
+    ui->scoreBoard->setColumnCount(2);
+
+    QStringList headers;
+    headers << "Name" << "Score";
+    ui->scoreBoard->setHorizontalHeaderLabels(headers);
 
     for(int i = 0; i < playerArray.size(); i++) {
-    model->setItem(i, 0, new QStandardItem(QString(playerArray[i][0])));
-    model->setItem(i, 1, new QStandardItem(playerArray[i][1]));
+        ui->scoreBoard->setItem(i, 0, new QTableWidgetItem(playerArray[i][0]));
+        ui->scoreBoard->setItem(i, 1, new QTableWidgetItem(playerArray[i][1]));
+
+    // Log player name and score for debugging
+    //qDebug() << "Name: " << playerArray[i][0];
+    //qDebug() << "Score: " << playerArray[i][1];
+
     }
 
 
-    ui->gridLayout->itemAtPosition(6, 0);
-
-    if (ui->gridLayout->itemAtPosition(6, 0)) {
-    ui->scoreBoard->setModel(model);
     ui->scoreBoard->horizontalHeader()->setStretchLastSection(true);
     ui->scoreBoard->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    } else {
-    qDebug() << "ui->scoreBoard is null";
-    }
-
-    //ui->scoreBoard->setModel(model);
-    //ui->scoreBoard->horizontalHeader()->setStretchLastSection(true);
-    //ui->scoreBoard->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 }
 
 // Checks if a number can be placed at grid[row][col]
@@ -405,10 +416,31 @@ void GameDialog::on_checkButton_clicked()
         int correct = grid[lastModified[0][0]][lastModified[0][1]];
         qInfo() << "lastInput:" << lastInput << "expected:" << correct;
         if(lastInput == correct){
-            qInfo() << "Success";
-            enableAll();
-            ui->statusLabel->setText("richtig");
-            lastModified[0][0] = -1;
+            if(std::find(allowed.begin(), allowed.end(), lastInput) != allowed.end()){
+                qInfo() << "Success";
+                ui->statusLabel->setText("richtig");
+
+
+                //update player scores
+                QString qstr = playerArray[currentTurnIndex][1];
+                bool ok;
+                int score = qstr.toInt(&ok);
+                if(ok & playerArray.size() > 1){
+                    score += lastInput;
+                    playerArray[currentTurnIndex][1] = QString::number(score);
+                    allowed.erase(std::remove(allowed.begin(), allowed.end(), lastInput), allowed.end());
+                }
+
+                enableAll();
+                lastModified[0][0] = -1;
+
+
+            }else{
+                qInfo() << "bereits in Runde verwendet";
+                ui->statusLabel->setText("Zahl bereits verwendet");
+                currentTurnIndex = (currentTurnIndex+1) % playerArray.size();
+                allowed = {1,2,3,4,5,6,7,8,9};                                      //<<ändern
+            }
 
 
 
@@ -424,19 +456,44 @@ void GameDialog::on_checkButton_clicked()
             //model->appendRow(playerArray);
 
             // scoreBoard transparent und deaktiviert machen
-            ui->scoreBoard->setStyleSheet("background-color: transparent;");
-            ui->scoreBoard->setEditTriggers(QAbstractItemView::NoEditTriggers);
+            // ui->scoreBoard->setStyleSheet("background-color: transparent;");
+            //ui->scoreBoard->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
         }else if(lastModified[0][0] == -1){
             ui->statusLabel->setText("Keine Eingabe");
         }
         else{
             ui->statusLabel->setText("falsch");
+            currentTurnIndex = (currentTurnIndex+1) % playerArray.size();
+            allowed = {1,2,3,4,5,6,7,8,9};
+        }
+        ui->currPlayerLabel->setText("Am Zug: " + playerArray[currentTurnIndex][0]);
+        updateScore(0);
+
+        if(allowed.size() == 0){
+            currentTurnIndex = (currentTurnIndex+1) % playerArray.size();
+            allowed = {1,2,3,4,5,6,7,8,9};
         }
 
+        updateAllowed();
+        checkFinished();
 }
 void GameDialog::on_pushButton_clicked()
 {
     QApplication::quit();
 }
 
+void GameDialog::updateAllowed(){
+
+    QString allowedStr;
+    for(int num : allowed)
+            allowedStr.append(QString::number(num) + " ");
+
+    ui->currRoundLabel->setText("{" + QString::number(currentRound) + " " + allowedStr + "}");
+
+}
+
+void GameDialog::openFinalScoreDialog(){
+    finalScoreDialog = new finalscore(playerArray);
+    finalScoreDialog->show();
+}

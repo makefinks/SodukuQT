@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QLineEdit>
 #include <QVector>
+#include "finalscore.h"
 #define N 9
 
 namespace Ui {
@@ -26,19 +27,24 @@ public:
     void enableAll();
     void connectEditListener();
     void updateScore(int number);
+    void updateAllowed();
+    void checkFinished();
 
 private slots:
     void on_lineEdit_5_textEdited(const QString &arg1);
     void on_checkButton_clicked();
     void on_pushButton_clicked();
+    void openFinalScoreDialog();
 
 private:
     int currentRound = 0;
-    int allowed[9] = {1,2,3,4,5,6,7,8,9};
+    int currentTurnIndex = 0;
+    std::vector<int> allowed = {1,2,3,4,5,6,7,8,9};
     Ui::GameDialog *ui;
     int lastModified[1][2] = {};
     int grid[N][N] = {0};
     QVector<QVector<QString>> playerArray;
+    finalscore * finalScoreDialog;
 };
 
 #endif // GAMEDIALOG_H
